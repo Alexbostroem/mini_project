@@ -19,8 +19,10 @@ class recoveryPredictor():
         # Normalizeing
         self.norm_recovery_data()
 
-        # Enginerring features
 
+        # Enginerring features
+        self.recovery_score()
+        
     def fit(self):
       
         pass
@@ -91,6 +93,19 @@ class recoveryPredictor():
         scaler = MinMaxScaler()
         self.recovery_data[['asleep_minutes', 'resting_heart_rate']] = scaler.fit_transform(self.recovery_data[['asleep_minutes', 'resting_heart_rate']])
 
+    def calculate_recovery_score(self, asleep_min_norm, rhr_norm):
+        rhr_weight = 0.6
+        asleep_weight = 0.4
+
+        recovery_score = (rhr_weight * rhr_norm) + (asleep_weight * (1 - asleep_min_norm))
+
+        recovery_score = recovery_score * 100
+
+        return recovery_score
+
+    def recovery_score(self):
+        self.recovery_data['Recovery_score'] = self.calculate_recovery_score(self.recovery_data['asleep_minutes'], self.recovery_data['resting_heart_rate'])
+
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")
     calories_df = pd.read_csv("data/hourlyCalories_merged.csv")
@@ -99,7 +114,7 @@ def main():
 
 
 
-    model = recoveryPredictor(activity_df,sleep_df, heart_rate_df)
+    model = recoveryPredictor(activity_df, sleep_df, heart_rate_df)
 
     print(model.recovery_data)
 

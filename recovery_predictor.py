@@ -8,20 +8,26 @@ class recoveryPredictor():
         self.detailed_sleep_data = None
         self.heart_rate = heart_rate
         self.recovery_data = None
+        self.heart_rate_sleep_data = None
+
 
         # Pre processing
-        self.recovery_preprocess()
+        self.sleep_preprocess()
         self.heart_rate_preprocess()
 
         # Enginerring features
+        self.recovery_feature()
 
-        #N
+        #Normalizeing
 
     def fit(self):
       
         pass
 
-    def recovery_preprocess(self):
+    def sleep_preprocess(self):
+        # Drop all emptyp cells
+        self.sleep.dropna(inplace=True)
+
         # Group by 'Id' and 'logId' directly from the original sleep DataFrame
         self.detailed_sleep_data = self.sleep.groupby(['Id', 'logId']).agg(
             start_time=('date', 'min'),
@@ -34,12 +40,59 @@ class recoveryPredictor():
 
 
     def heart_rate_preprocess(self):
+        # Drop all emptyp cells
+        self.heart_rate.dropna(inplace=True)
+
+        # Convert Time to pd time format
         self.heart_rate['Time'] = pd.to_datetime(self.heart_rate['Time'])
 
 
+    def recovery_feature(self):
+        # Apply the filter_heartrate_from_sleep function to each row of detailed_sleep_data
+        self.heart_rate_sleep_data = self.detailed_sleep_data.apply(lambda row: self.filter_heartrate_from_sleep(row, self.heart_rate), axis=1)
+
+        # Concatenate the filtered heart rate data into a single DataFrame
+        self.heart_rate_sleep_data = pd.concat(self.heart_rate_sleep_data.tolist())
+
+        # Convert Time to pd time format
+        self.heart_rate_sleep_data['Time']= self.heart_rate_sleep_data['Time'].dt.date
+
+        # Lets find the lowers observed heartrate during every night for every user and call this resting heart rate
+        self.find_resting_heart_rate()
+
+        self.build_recovery_data()
 
 
+    def filter_heartrate_from_sleep(self, sleep_data_row, heart_rate_data):
+        filter_data = heart_rate_data[(heart_rate_data['Time'] >= sleep_data_row['start_time']) & 
+                                        (heart_rate_data['Time'] <= sleep_data_row['end_time'])]
+        return filter_data
 
+    def find_resting_heart_rate(self):
+        self.heart_rate_sleep_data = self.heart_rate_sleep_data.groupby(['Id','Time']).agg(
+            resting_heart_rate = ('Value', 'min')
+        ).reset_index()
+
+        self.heart_rate_sleep_data.rename(columns={'Time': 'date'}, inplace=True)
+
+    def build_recovery_data(self):
+        self.detailed_sleep_data['start_time'] = pd.to_datetime(self.detailed_sleep_data['start_time'])
+        self.detailed_sleep_data['start_time'] = pd.to_datetime(self.detailed_sleep_data['start_time'])
+        
+        temp_sleep = self.detailed_sleep_data
+        temp_sleep.rename(columns={'start_time': 'date'}, inplace=True)
+        temp_sleep.drop(columns=['end_time'], inplace=True)
+        temp_sleep.drop(columns=['total_minutes'], inplace=True)
+        temp_sleep.drop(columns=['restless_minutes'], inplace=True)
+        temp_sleep.drop(columns=['awake_minutes'], inplace=True)
+        temp_sleep['date'] = pd.to_datetime(temp_sleep['date']).dt.date
+    
+        self.recovery_data = pd.merge(temp_sleep, self.heart_rate_sleep_data, on=['Id', 'date'], how='inner')    
+
+
+        
+
+        pass
 
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")
@@ -51,6 +104,7 @@ def main():
 
     model = recoveryPredictor(activity_df,sleep_df, heart_rate_df)
 
+    print(model.recovery_data)
 
 
 

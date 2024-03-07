@@ -1,5 +1,5 @@
 import pandas as pd
-
+from sklearn.preprocessing import MinMaxScaler
 
 class recoveryPredictor():
     def __init__(self, activity, sleep, heart_rate):
@@ -14,11 +14,12 @@ class recoveryPredictor():
         # Pre processing
         self.sleep_preprocess()
         self.heart_rate_preprocess()
+        self.get_recovery_data()
+
+        # Normalizeing
+        self.norm_recovery_data()
 
         # Enginerring features
-        self.recovery_feature()
-
-        #Normalizeing
 
     def fit(self):
       
@@ -38,7 +39,6 @@ class recoveryPredictor():
             awake_minutes=('value', lambda x: (x == 3).sum())
         ).reset_index()
 
-
     def heart_rate_preprocess(self):
         # Drop all emptyp cells
         self.heart_rate.dropna(inplace=True)
@@ -46,8 +46,7 @@ class recoveryPredictor():
         # Convert Time to pd time format
         self.heart_rate['Time'] = pd.to_datetime(self.heart_rate['Time'])
 
-
-    def recovery_feature(self):
+    def get_recovery_data(self):
         # Apply the filter_heartrate_from_sleep function to each row of detailed_sleep_data
         self.heart_rate_sleep_data = self.detailed_sleep_data.apply(lambda row: self.filter_heartrate_from_sleep(row, self.heart_rate), axis=1)
 
@@ -61,7 +60,6 @@ class recoveryPredictor():
         self.find_resting_heart_rate()
 
         self.build_recovery_data()
-
 
     def filter_heartrate_from_sleep(self, sleep_data_row, heart_rate_data):
         filter_data = heart_rate_data[(heart_rate_data['Time'] >= sleep_data_row['start_time']) & 
@@ -78,7 +76,7 @@ class recoveryPredictor():
     def build_recovery_data(self):
         self.detailed_sleep_data['start_time'] = pd.to_datetime(self.detailed_sleep_data['start_time'])
         self.detailed_sleep_data['start_time'] = pd.to_datetime(self.detailed_sleep_data['start_time'])
-        
+    
         temp_sleep = self.detailed_sleep_data
         temp_sleep.rename(columns={'start_time': 'date'}, inplace=True)
         temp_sleep.drop(columns=['end_time'], inplace=True)
@@ -87,12 +85,11 @@ class recoveryPredictor():
         temp_sleep.drop(columns=['awake_minutes'], inplace=True)
         temp_sleep['date'] = pd.to_datetime(temp_sleep['date']).dt.date
     
-        self.recovery_data = pd.merge(temp_sleep, self.heart_rate_sleep_data, on=['Id', 'date'], how='inner')    
+        self.recovery_data = pd.merge(temp_sleep, self.heart_rate_sleep_data, on=['Id', 'date'], how='inner') 
 
-
-        
-
-        pass
+    def norm_recovery_data(self):
+        scaler = MinMaxScaler()
+        self.recovery_data[['asleep_minutes', 'resting_heart_rate']] = scaler.fit_transform(self.recovery_data[['asleep_minutes', 'resting_heart_rate']])
 
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")

@@ -1,10 +1,12 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import GridSearchCV
+
 
 class recoveryPredictor():
     def __init__(self, activity, sleep, heart_rate, n):
@@ -19,7 +21,7 @@ class recoveryPredictor():
         self.X_test = None
         self.y_train = None
         self.y_test = None
-        self.kneigh = KNeighborsClassifier(n_neighbors=n)
+        self.forest = RandomForestRegressor()
 
 
         # Pre processing
@@ -40,10 +42,27 @@ class recoveryPredictor():
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-        self.kneigh.fit(self.X_train, self.y_train)
+
+        param_grid = {
+            'n_estimators': [50, 100, 200],  # Number of trees in the forest
+            'max_depth': [None, 10, 20],      # Maximum depth of the trees
+            'min_samples_split': [2, 5, 10],  # Minimum number of samples required to split an internal node
+            'min_samples_leaf': [1, 2, 4]     # Minimum number of samples required to be at a leaf node
+            }
+        
+        grid_search = GridSearchCV(estimator=self.forest, param_grid=param_grid, scoring='neg_mean_squared_error', cv=5)
+
+        grid_search.fit(self.X_train, self.y_train)
+
+        print("Best parameters found:", grid_search.best_params_)
+
+        self.forest = grid_search.best_estimator_
+
+        
+        self.forest.fit(self.X_train, self.y_train)
         
     def predict(self):
-        y_predicted = self.kneigh.predict(self.X_test)
+        y_predicted = self.forest.predict(self.X_test)
         return y_predicted
     
 
@@ -180,6 +199,19 @@ class recoveryPredictor():
         plt.title('Distribution of Residuals')
         plt.show()
 
+        feature_importances = self.forest.feature_importances_
+        feature_names = self.X_train.columns
+
+        sorted = feature_importances.argsort()[::-1]
+
+        plt.figure(figsize=(8,6))
+        plt.bar(range(self.X_train.shape[1]), feature_importances[sorted], align='center')
+        plt.xticks(range(self.X_train.shape[1]), [feature_names[i] for i in sorted], rotation=90)
+        plt.xlabel('Feature')
+        plt.ylabel('Feature Importance')
+        plt.title('Feature Importance')
+        plt.tight_layout()
+        plt.show()
 
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")
@@ -188,7 +220,7 @@ def main():
 
 
 
-    model = recoveryPredictor(activity_df, sleep_df, heart_rate_df,3)
+    model = recoveryPredictor(activity_df, sleep_df, heart_rate_df,5)
     model.fit()
     y_predicted = model.predict()
     model.score()

@@ -194,11 +194,7 @@ def main():
     y_predicted = model.predict()
     model.score()
     model.visualize_results(y_predicted)
-    print("Predicted recovery: ")
-    print(y_predicted * 100)
-    print("Actual recovery from test set: ")
-    print(model.y_test * 100)
-
+ 
  
 
 

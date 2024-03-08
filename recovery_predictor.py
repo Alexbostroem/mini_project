@@ -9,19 +9,20 @@ class recoveryPredictor():
         self.heart_rate = heart_rate
         self.recovery_data = None
         self.heart_rate_sleep_data = None
+        self.model_data = None
 
 
         # Pre processing
         self.sleep_preprocess()
         self.heart_rate_preprocess()
         self.get_recovery_data()
-
-        # Normalizeing
         self.norm_recovery_data()
-
 
         # Enginerring features
         self.recovery_score()
+
+        self.make_model_data()
+
         
     def fit(self):
       
@@ -99,12 +100,40 @@ class recoveryPredictor():
 
         recovery_score = (rhr_weight * rhr_norm) + (asleep_weight * (1 - asleep_min_norm))
 
-        recovery_score = recovery_score * 100
+        recovery_score = recovery_score
 
         return recovery_score
 
     def recovery_score(self):
         self.recovery_data['Recovery_score'] = self.calculate_recovery_score(self.recovery_data['asleep_minutes'], self.recovery_data['resting_heart_rate'])
+
+    def make_model_data(self):
+       self.activity.rename(columns={'ActivityDate': 'date'}, inplace=True)
+       self.activity['date'] = pd.to_datetime(self.activity['date']).dt.date
+
+
+       self.model_data = pd.merge(self.activity, self.recovery_data, on=['Id', 'date'], how='inner')
+
+
+
+        # Columns to normalize
+        # Columns to normalize
+       columns_to_normalize = ['TotalSteps', 'TotalDistance', 'TrackerDistance', 'LoggedActivitiesDistance', 
+                            'VeryActiveDistance', 'ModeratelyActiveDistance', 'LightActiveDistance', 
+                            'SedentaryActiveDistance', 'VeryActiveMinutes', 'FairlyActiveMinutes', 
+                            'LightlyActiveMinutes', 'SedentaryMinutes', 'Calories']
+
+       scaler = MinMaxScaler()
+
+
+       self.model_data[columns_to_normalize] = scaler.fit_transform(self.model_data[columns_to_normalize])
+
+       self.model_data.drop(columns=['logId'], inplace=True)
+       
+
+
+       print(self.model_data.head())
+
 
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")
@@ -116,7 +145,7 @@ def main():
 
     model = recoveryPredictor(activity_df, sleep_df, heart_rate_df)
 
-    print(model.recovery_data)
+ 
 
 
 

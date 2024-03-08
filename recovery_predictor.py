@@ -1,5 +1,10 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class recoveryPredictor():
     def __init__(self, activity, sleep, heart_rate):
@@ -10,6 +15,11 @@ class recoveryPredictor():
         self.recovery_data = None
         self.heart_rate_sleep_data = None
         self.model_data = None
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
+        self.linear_regression = LinearRegression()
 
 
         # Pre processing
@@ -25,8 +35,22 @@ class recoveryPredictor():
 
         
     def fit(self):
-      
-        pass
+        X = self.model_data.drop(['Id', 'date', 'Recovery_score'], axis=1)
+        y = self.model_data['Recovery_score']
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        self.linear_regression.fit(self.X_train, self.y_train)
+        
+    def predict(self):
+        y_predicted = self.linear_regression.predict(self.X_test)
+        return y_predicted
+    
+
+    def score(self):
+        mse = mean_squared_error(self.y_test, self.predict())
+        print("Mean Squared Error:", mse)
+        
 
     def sleep_preprocess(self):
         # Drop all emptyp cells
@@ -129,10 +153,32 @@ class recoveryPredictor():
        self.model_data[columns_to_normalize] = scaler.fit_transform(self.model_data[columns_to_normalize])
 
        self.model_data.drop(columns=['logId'], inplace=True)
-       
+    
+    def visualize_results(self,y_predicted):
+        # Scatter plot of Actual vs. Predicted values
+        plt.figure(figsize=(8,6))
+        plt.scatter(self.y_test, y_predicted, alpha=0.5)
+        plt.xlabel('Actual Recovery Score')
+        plt.ylabel('Predicted Recovery Score')
+        plt.title('Actual vs. Predicted Recovery Score')
+        plt.show()
+        
+          # Residual Plot
+        plt.figure(figsize=(8, 6))
+        sns.residplot(x=y_predicted, y=self.y_test - y_predicted, lowess=True, line_kws={'color': 'red', 'lw': 1})
+        plt.xlabel('Predicted Recovery Score')
+        plt.ylabel('Residuals')
+        plt.title('Residual Plot')
+        plt.axhline(y=0, color='k', linestyle='--')  # Add a horizontal line at y=0
+        plt.show()
 
-
-       print(self.model_data.head())
+        # Distribution of Residuals
+        plt.figure(figsize=(8, 6))
+        sns.histplot(self.y_test - y_predicted, kde=True)
+        plt.xlabel('Residuals')
+        plt.ylabel('Frequency')
+        plt.title('Distribution of Residuals')
+        plt.show()
 
 
 def main():
@@ -144,6 +190,10 @@ def main():
 
 
     model = recoveryPredictor(activity_df, sleep_df, heart_rate_df)
+    model.fit()
+    y_predicted = model.predict()
+    model.score()
+    model.visualize_results(y_predicted)
 
  
 

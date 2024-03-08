@@ -1,13 +1,13 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 class recoveryPredictor():
-    def __init__(self, activity, sleep, heart_rate):
+    def __init__(self, activity, sleep, heart_rate, n):
         self.activity = activity
         self.sleep = sleep
         self.detailed_sleep_data = None
@@ -19,7 +19,7 @@ class recoveryPredictor():
         self.X_test = None
         self.y_train = None
         self.y_test = None
-        self.linear_regression = LinearRegression()
+        self.kneigh = KNeighborsClassifier(n_neighbors=n)
 
 
         # Pre processing
@@ -40,10 +40,10 @@ class recoveryPredictor():
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-        self.linear_regression.fit(self.X_train, self.y_train)
+        self.kneigh.fit(self.X_train, self.y_train)
         
     def predict(self):
-        y_predicted = self.linear_regression.predict(self.X_test)
+        y_predicted = self.kneigh.predict(self.X_test)
         return y_predicted
     
 
@@ -188,7 +188,7 @@ def main():
 
 
 
-    model = recoveryPredictor(activity_df, sleep_df, heart_rate_df)
+    model = recoveryPredictor(activity_df, sleep_df, heart_rate_df,3)
     model.fit()
     y_predicted = model.predict()
     model.score()

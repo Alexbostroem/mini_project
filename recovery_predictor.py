@@ -35,10 +35,10 @@ class recoveryPredictor():
 
         
     def fit(self):
-        X = self.model_data.drop(['Id', 'date', 'Recovery_score'], axis=1)
+        X = self.model_data.drop(['Id', 'date','asleep_minutes' ,'resting_heart_rate' ,'Recovery_score'], axis=1)
         y = self.model_data['Recovery_score']
 
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
         self.linear_regression.fit(self.X_train, self.y_train)
         
@@ -194,6 +194,10 @@ def main():
     y_predicted = model.predict()
     model.score()
     model.visualize_results(y_predicted)
+    print("Predicted recovery: ")
+    print(y_predicted * 100)
+    print("Actual recovery from test set: ")
+    print(model.y_test * 100)
 
  
 

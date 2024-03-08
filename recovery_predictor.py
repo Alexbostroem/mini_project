@@ -66,8 +66,6 @@ class recoveryPredictor():
             awake_minutes=('value', lambda x: (x == 3).sum())
         ).reset_index()
 
-
-
     def heart_rate_preprocess(self):
         # Drop all emptyp cells
         self.heart_rate.dropna(inplace=True)

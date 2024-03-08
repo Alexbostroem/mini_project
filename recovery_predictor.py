@@ -5,6 +5,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import GridSearchCV
+
 
 class recoveryPredictor():
     def __init__(self, activity, sleep, heart_rate):
@@ -40,7 +42,20 @@ class recoveryPredictor():
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
+
+        param_grid = {
+            'fit_intercept': [True, False],  # Whether to calculate the intercept for this modelc
+        }
+
+        grid_search = GridSearchCV(estimator=self.linear_regression, param_grid=param_grid, scoring='neg_mean_squared_error', cv=5)
+        grid_search.fit(self.X_train, self.y_train)
+
+        print("Best parameters found:", grid_search.best_params_)
+
+        self.linear_regression = grid_search.best_estimator_
+
         self.linear_regression.fit(self.X_train, self.y_train)
+
         
     def predict(self):
         y_predicted = self.linear_regression.predict(self.X_test)

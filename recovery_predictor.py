@@ -66,6 +66,8 @@ class recoveryPredictor():
             awake_minutes=('value', lambda x: (x == 3).sum())
         ).reset_index()
 
+
+
     def heart_rate_preprocess(self):
         # Drop all emptyp cells
         self.heart_rate.dropna(inplace=True)
@@ -183,11 +185,8 @@ class recoveryPredictor():
 
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")
-    calories_df = pd.read_csv("data/hourlyCalories_merged.csv")
     sleep_df = pd.read_csv("data/minuteSleep_merged.csv")
     heart_rate_df = pd.read_csv("data/heartrate_seconds_merged.csv")
-
-
 
     model = recoveryPredictor(activity_df, sleep_df, heart_rate_df)
     model.fit()

@@ -162,7 +162,6 @@ class recoveryPredictor():
 
        scaler = MinMaxScaler()
 
-
        self.model_data[columns_to_normalize] = scaler.fit_transform(self.model_data[columns_to_normalize])
 
        self.model_data.drop(columns=['logId'], inplace=True)

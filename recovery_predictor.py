@@ -34,6 +34,7 @@ class recoveryPredictor():
         self.recovery_score()
 
         self.make_model_data()
+        print(self.model_data.head())
 
         
     def fit(self):

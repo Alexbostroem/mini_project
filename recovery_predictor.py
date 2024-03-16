@@ -154,8 +154,6 @@ class recoveryPredictor():
        self.model_data = pd.merge(self.activity, self.recovery_data, on=['Id', 'date'], how='inner')
 
 
-
-        # Columns to normalize
         # Columns to normalize
        columns_to_normalize = ['TotalSteps', 'TotalDistance', 'TrackerDistance', 'LoggedActivitiesDistance', 
                             'VeryActiveDistance', 'ModeratelyActiveDistance', 'LightActiveDistance', 

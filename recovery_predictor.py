@@ -98,7 +98,7 @@ class recoveryPredictor():
         # Convert Time to pd time format
         self.heart_rate_sleep_data['Time']= self.heart_rate_sleep_data['Time'].dt.date
 
-        # Lets find the lowers observed heartrate during every night for every user and call this resting heart rate
+        # Lets find the lowest observed heartrate during every night for every user and call this resting heart rate
         self.find_resting_heart_rate()
 
         self.build_recovery_data()

@@ -196,7 +196,6 @@ class recoveryPredictor():
 
 def main():
     activity_df = pd.read_csv("data/dailyActivity_merged.csv")
-    calories_df = pd.read_csv("data/hourlyCalories_merged.csv")
     sleep_df = pd.read_csv("data/minuteSleep_merged.csv")
     heart_rate_df = pd.read_csv("data/heartrate_seconds_merged.csv")
 

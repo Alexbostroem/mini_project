@@ -219,8 +219,6 @@ def main():
     sleep_df = pd.read_csv("data/minuteSleep_merged.csv")
     heart_rate_df = pd.read_csv("data/heartrate_seconds_merged.csv")
 
-
-
     model = recoveryPredictor(activity_df, sleep_df, heart_rate_df,5)
     model.fit()
     y_predicted = model.predict()

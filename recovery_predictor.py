@@ -165,6 +165,8 @@ class recoveryPredictor():
        self.model_data[columns_to_normalize] = scaler.fit_transform(self.model_data[columns_to_normalize])
 
        self.model_data.drop(columns=['logId'], inplace=True)
+
+       self.model_data.to_excel("output.xlsx", index=False)
     
     def visualize_results(self,y_predicted):
         # Scatter plot of Actual vs. Predicted values
